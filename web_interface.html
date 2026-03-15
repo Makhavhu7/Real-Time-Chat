@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant - Web Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-indicator.active {
+            background: #4CAF50;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.inactive {
+            background: #ccc;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .chat-area {
+            margin-bottom: 20px;
+        }
+
+        .chat-box {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.assistant {
+            background: #e8f5e9;
+            color: #333;
+            margin-right: auto;
+        }
+
+        .message.system {
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            font-size: 12px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .message-label {
+            font-size: 11px;
+            font-weight: bold;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-record {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-record:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76,175,80,0.3);
+        }
+
+        .btn-record:active {
+            animation: recordPulse 0.5s;
+        }
+
+        @keyframes recordPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-clear {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #e68900;
+        }
+
+        .btn-stop {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #da190b;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            resize: vertical;
+            min-height: 50px;
+            max-height: 100px;
+        }
+
+        .btn-send {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            white-space: nowrap;
+        }
+
+        .btn-send:hover {
+            background: #5568d3;
+        }
+
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1565c0;
+            margin-top: 15px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 Voice Assistant</h1>
+            <p>Local AI-powered conversation interface</p>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="status-indicator active"></span>
+                <div class="status-text">Microphone</div>
+                <div style="font-size: 11px; color: #4CAF50; font-weight: bold;">ACTIVE</div>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator active"></span>
+                <div class="status-text">AI Model</div>
+                <div style="font-size: 11px; color: #4CAF50; font-weight: bold;">READY</div>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator active"></span>
+                <div class="status-text">Audio</div>
+                <div style="font-size: 11px; color: #4CAF50; font-weight: bold;">ACTIVE</div>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-box" id="chatBox">
+                <div class="message system">
+                    <strong>Session Started</strong><br>
+                    Microphone is listening. Speak naturally or type your message below.
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-record" onclick="startListening()">🎙️ Start Listening</button>
+            <button class="btn-stop" onclick="stopListening()">⏹️ Stop</button>
+            <button class="btn-clear" onclick="clearChat()">Clear Chat</button>
+        </div>
+
+        <div class="input-area">
+            <textarea id="userInput" placeholder="Type your message here or use the microphone..."></textarea>
+            <button class="btn-send" onclick="sendMessage()">Send</button>
+        </div>
+
+        <div class="info">
+            <strong>ℹ️ How it works:</strong><br>
+            1. Click "Start Listening" to activate microphone<br>
+            2. Speak your question naturally<br>
+            3. The AI will respond with both text and audio<br>
+            4. Or type a message and click Send
+        </div>
+    </div>
+
+    <script>
+        // Text-to-speech configuration
+        const speechSynthesis = window.speechSynthesis;
+        let isSpeaking = false;
+        
+        // Audio recording variables
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let audioContext = null;
+
+        function addMessage(text, type) {
+            const chatBox = document.getElementById('chatBox');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            
+            let label = '';
+            if (type === 'user') label = '<div class="message-label">You</div>';
+            if (type === 'assistant') label = '<div class="message-label">Assistant</div>';
+            if (type === 'system') label = '';
+            
+            message.innerHTML = label + text;
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function speakResponse(text) {
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            utterance.onstart = () => {
+                isSpeaking = true;
+                addMessage('🔊 Speaking...', 'system');
+            };
+            
+            utterance.onend = () => {
+                isSpeaking = false;
+                // Remove the "Speaking..." message
+                const messages = document.querySelectorAll('.message.system');
+                if (messages.length > 0) {
+                    const lastMsg = messages[messages.length - 1];
+                    if (lastMsg.textContent.includes('Speaking')) {
+                        lastMsg.remove();
+                    }
+                }
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        async function startListening() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Create audio context and recorder
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                isRecording = true;
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstart = () => {
+                    addMessage('🎤 Listening... Please speak clearly', 'system');
+                    console.log('Recording started');
+                };
+                
+                mediaRecorder.start();
+                
+            } catch (error) {
+                console.error('Microphone error:', error);
+                addMessage('❌ Could not access microphone. Please check permissions.', 'system');
+            }
+        }
+
+        function stopListening() {
+            if (!isRecording || !mediaRecorder) {
+                addMessage('⏹️ No recording in progress', 'system');
+                return;
+            }
+            
+            isRecording = false;
+            addMessage('⏹️ Processing audio...', 'system');
+            
+            mediaRecorder.onstop = async () => {
+                try {
+                    // Create audio blob from chunks
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    // Create FormData to send audio to backend
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.webm');
+                    
+                    // Remove "Processing..." message
+                    const messages = document.querySelectorAll('.message.system');
+                    if (messages.length > 0) {
+                        const lastMsg = messages[messages.length - 1];
+                        if (lastMsg.textContent.includes('Processing')) {
+                            lastMsg.remove();
+                        }
+                    }
+                    
+                    // Show thinking indicator
+                    addMessage('<span class="loading"></span> Transcribing and thinking...', 'system');
+                    
+                    // Send audio to backend for transcription
+                    const response = await fetch('http://127.0.0.1:5000/api/transcribe', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Transcription error: ' + response.status);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Remove thinking message
+                    const systemMessages = document.querySelectorAll('.message.system');
+                    if (systemMessages.length > 0) {
+                        const lastMsg = systemMessages[systemMessages.length - 1];
+                        if (lastMsg.innerHTML.includes('loading')) {
+                            lastMsg.remove();
+                        }
+                    }
+                    
+                    // Add transcribed user message
+                    if (data.transcription) {
+                        addMessage(data.transcription, 'user');
+                    }
+                    
+                    // Add AI response
+                    if (data.response) {
+                        addMessage(data.response, 'assistant');
+                        // Speak the response
+                        speakResponse(data.response);
+                    } else {
+                        addMessage('Sorry, I could not generate a response. Please try again.', 'system');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    
+                    // Remove thinking message
+                    const systemMessages = document.querySelectorAll('.message.system');
+                    if (systemMessages.length > 0) {
+                        const lastMsg = systemMessages[systemMessages.length - 1];
+                        if (lastMsg.innerHTML.includes('loading')) {
+                            lastMsg.remove();
+                        }
+                    }
+                    
+                    addMessage('❌ Error: ' + error.message, 'system');
+                }
+                
+                // Stop microphone stream
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                audioChunks = [];
+            };
+            
+            mediaRecorder.stop();
+        }
+
+        function clearChat() {
+            document.getElementById('chatBox').innerHTML = '<div class="message system"><strong>Chat Cleared</strong><br>Ready for new conversation</div>';
+            
+            // Clear on backend
+            fetch('http://127.0.0.1:5000/api/clear', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+            }).catch(err => console.error('Clear error:', err));
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // Add user message
+            addMessage(text, 'user');
+            input.value = '';
+            
+            // Show thinking indicator
+            addMessage('<span class="loading"></span> Thinking...', 'system');
+            
+            // Send to backend API - use port 5000
+            fetch('http://127.0.0.1:5000/api/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: text})
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('API error: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                // Remove thinking message
+                const messages = document.querySelectorAll('.message.system');
+                if (messages.length > 0) {
+                    const lastMsg = messages[messages.length - 1];
+                    if (lastMsg.innerHTML.includes('loading')) {
+                        lastMsg.remove();
+                    }
+                }
+                
+                // Add AI response
+                if (data.response) {
+                    addMessage(data.response, 'assistant');
+                    // Speak the response
+                    speakResponse(data.response);
+                } else {
+                    addMessage('Sorry, I could not generate a response. Please try again.', 'system');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Remove thinking message
+                const messages = document.querySelectorAll('.message.system');
+                if (messages.length > 0) {
+                    const lastMsg = messages[messages.length - 1];
+                    if (lastMsg.innerHTML.includes('loading')) {
+                        lastMsg.remove();
+                    }
+                }
+                
+                addMessage('Error: Could not connect to AI. Make sure the server is running. Details: ' + error.message, 'system');
+            });
+        }
+
+        // Allow Enter key to send message
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initial message
+        window.addEventListener('load', function() {
+            addMessage('Welcome! The voice assistant is ready. Type your message below and the AI will respond with voice.', 'system');
+        });
+    </script>
+</body>
+</html>

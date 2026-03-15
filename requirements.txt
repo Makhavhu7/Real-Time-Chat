@@ -1,0 +1,7 @@
+pyaudio
+numpy
+faster-whisper
+gpt4all
+silero-vad
+torch
+onnxruntime
