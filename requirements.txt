@@ -1,3 +1,4 @@
+flask
 numpy
 faster-whisper
 gpt4all
