@@ -1,4 +1,3 @@
-pyaudio
 numpy
 faster-whisper
 gpt4all
